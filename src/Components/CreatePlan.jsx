@@ -23,40 +23,43 @@ export function CreatePlan() {
     };
     
     const handleChangeType = (value) => {
-        setType(value);
+        setType(String(value)); // Convert value to string before setting state
     };
+    
 
     const handleSubmit = (event) => {
-        event.preventDefault();
-    
-        // Form data to be sent in the POST request
         const formData = {
-            pathID: 1,
-            learningPlan: {
-                learningPlanID: 12
-            },
-            course: {
-                courseID: selectedCourse,
-                courseName: courseItem.find(course => course.courseID === selectedCourse)?.courseName || ''
-            },
-            type: type || '',
-            trainer: instructor || 'John Doe',
-            startDate: startDate || '2024-04-08',
-            endDate: endDate || '2024-04-15'
+          batch: batch,
+          type: type,
+          start_date: event.target.start_date.value,
+          end_date: event.target.end_date.value,
         };
-    
-        // Axios POST request to the learning-plan-paths endpoint
-        axios.post('http://localhost:1111/learning-plan-paths', formData)
-            .then(response => {
-                console.log('Learning path data posted successfully:', response.data);
-                console.log('Data is posting successfully');
-            })
-            .catch(error => {
-                console.error('Error posting learning path data:', error);
-                console.log('Data is not posting');
-            });
+        const start = event.target.start_date.value;
+        const end = event.target.end_date.value;
+        const dateChecker = start.replace(/-/g, "") - end.replace(/-/g, "");
+     
+        if (dateChecker < 0) {
+        //   Axios POST request to the learningplans/save endpoint
+          axios.post('http://localhost:1111/learningplans/save', formData)
+              .then(response => {
+                  console.log('Learning plan saved successfully:', response.data);
+                  // Redirect to another page after successful submission
+                //   navigate("/path");
+              })
+              .catch(error => {
+                  console.error('Error saving learning plan:', error);
+              });
+        } else {
+          alert("Enter Correct Dates");
+        }
+     
+        event.preventDefault();
+     
+        // Form data to be sent in the POST request
+     
+        // Reset form fields after submission
+        event.target.reset();
     };
-    
 
     return (
         <Card className="mt-6 w-full md:w-3/4 lg:w-2/4 xl:w-2/4 mx-auto ">
@@ -72,21 +75,21 @@ export function CreatePlan() {
             <CardBody>
                 <form className='container p-6 bg-white rounded-lg' onSubmit={handleSubmit}>
                     <div className="mb-4">
-                    <Select variant="outlined" label="Batch Name" id="batch" name="batch" onChange={handleChangeBatch}>
-    <Option value='batch1'>Batch1</Option>
-    <Option value="batch2">Batch2</Option>
-    <Option value="batch3">Batch3</Option>
-    <Option value="od102">OD102</Option>
-    <Option value="ow101">OW101</Option>
-</Select>
+                        <Select variant="outlined" label="Batch Name" id="batch" name="batch" onChange={handleChangeBatch}>
+                            <Select.Option value='batch1'>Batch1</Select.Option>
+                            <Select.Option value="batch2">Batch2</Select.Option>
+                            <Select.Option value="batch3">Batch3</Select.Option>
+                            <Select.Option value="od102">OD102</Select.Option>
+                            <Select.Option value="ow101">OW101</Select.Option>
+                        </Select>
                     </div>
                     <div className="mb-4">
-                    <Select variant="outlined" label="Type" id="Type" name="Type" value="Type" onChange={handleChangeType}>
-    <Option value='bootcamp'>BOOTCAMP</Option>
-    <Option value="on_demand">ON-DEMAND</Option>
-    <Option value="mandatory">MANDATORY</Option>
-    <Option value="org_wide">ORG-WIDE</Option>
-</Select>
+                        <Select variant="outlined" label="Type" id="Type" name="Type" value={type} onChange={handleChangeType}>
+                            <Select.Option value='bootcamp'>BOOTCAMP</Select.Option>
+                            <Select.Option value="on_demand">ON-DEMAND</Select.Option>
+                            <Select.Option value="mandatory">MANDATORY</Select.Option>
+                            <Select.Option value="org_wide">ORG-WIDE</Select.Option>
+                        </Select>
                     </div>
                     <div className='mb-4'>
                         <Input id="start_date" name="start_date" type="date" variant="outlined" label="Start date" shrink={true} />

@@ -42,7 +42,7 @@ export function BulkUpload() {
   };
 
   return (
-    <Card className="w-full md:w-3/4 lg:w-2/4 xl:w-2/4 mx-auto h-2/5 flex justify-center items-center">
+    <Card className="w-full md:w-3/4 lg:w-2/4 xl:w-2/4 mx-auto h-2/5 flex justify-evenly items-center">
       <h1>Upload excel files</h1>
       <input type='file' id='file' name='file' accept=".xlsx" ref={fileInputRef} onChange={handleFileChange} style={{display: "none"}} />
       <Button variant="gradient" className="flex items-center gap-3 w-1/5" onClick={handleClick}>
@@ -53,7 +53,7 @@ export function BulkUpload() {
       </Button>
       {selectedFile && <p className="absolute top-40 mt-3 ml-2 text-sm">Selected File: {selectedFile.name}</p>}
       <Button variant="gradient" className="flex items-center gap-3 w-1/5" onClick={handleUpload}>
-        Upload
+        Submit
       </Button>
     </Card>
   );
