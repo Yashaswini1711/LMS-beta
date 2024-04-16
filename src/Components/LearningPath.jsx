@@ -64,7 +64,7 @@ export function LearningPath() {
         console.log('Form Data:', formData);
     
         try {
-            const response =  axios.post('http://localhost:1111/learning-plan-paths', formData);
+            const response =  axios.post('http://172.18.4.108:1111/learning-plan-path', formData);
             console.log('Learning path data posted successfully:', response.data);
             console.log('Data is posting successfully');
         } catch (error) {

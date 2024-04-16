@@ -1,4 +1,4 @@
-import { Button, Card } from "@material-tailwind/react";
+import { Button, Card, Option, Select} from "@material-tailwind/react";
 import { useRef, useState } from "react";
 import axios from 'axios';
 
@@ -52,6 +52,7 @@ export function BulkUpload() {
         Upload Files
       </Button>
       {selectedFile && <p className="absolute top-40 mt-3 ml-2 text-sm">Selected File: {selectedFile.name}</p>}
+      
       <Button variant="gradient" className="flex items-center gap-3 w-1/5" onClick={handleUpload}>
         Submit
       </Button>

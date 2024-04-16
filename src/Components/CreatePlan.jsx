@@ -40,7 +40,7 @@ export function CreatePlan() {
      
         if (dateChecker < 0) {
         //   Axios POST request to the learningplans/save endpoint
-          axios.post('http://localhost:1111/learningplans/save', formData)
+          axios.post('http://172.18.4.108:1111/learning-plan', formData)
               .then(response => {
                   console.log('Learning plan saved successfully:', response.data);
                   // Redirect to another page after successful submission

@@ -8,8 +8,12 @@ import {
 } from "@material-tailwind/react";
 import { useState } from "react";
 import axios from "axios";
+import { useLocation } from 'react-router-dom';
  
 export function Topics() {
+    const location = useLocation();
+    const courseId = new URLSearchParams(location.search).get("courseID");
+
     const [topics, setTopics] = useState([{ topicName: '', description: '' }]);
  
     const handleAddTopic = () => {
@@ -30,9 +34,16 @@ export function Topics() {
 
     const handleSubmitAllTopics = (e) => {
         e.preventDefault();
-        
-        const topicData = topics[topics.length - 1]; // Get the last topic added
-        axios.post('http://localhost:1111/topics/add', topicData)
+    
+        const formattedTopics = topics.map(topic => ({
+            topicName: topic.topicName,
+            description: topic.description,
+            course: {
+                courseID: courseId // Corrected reference to courseId
+            }
+        }));
+    
+        axios.post('http://172.18.4.108:1111/topic/multiple', formattedTopics)
             .then(response => {
                 console.log('Topic data posted successfully:', response.data);
                 setTopics([...topics, { title: '', description: '' }]);
