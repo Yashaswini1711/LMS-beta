@@ -34,22 +34,28 @@ export function Topics() {
   const handleSubmitAllTopics = (e) => {
     e.preventDefault();
 
-    const topicData = topics[topics.length - 1];
-    const topicWithCourse = {
-      ...topicData,
+    // Construct an array to hold all topic data
+    const allTopicsData = topics.map((topicData, index) => ({
+      topicID: index, // Assuming topicID is based on index, you might have a different way of generating IDs
+      topicName: topicData.topicName,
+      description: topicData.description,
       course: {
         courseID: courseId,
       },
-    };
+    }));
+
+    // Post all topics data
     axios
-      .post("http://172.18.4.108:1111/topic", topicWithCourse)
+      .post("http://172.18.4.108:1111/topic/multiple", allTopicsData)
       .then((response) => {
-        console.log("Topic data posted successfully:", response.data);
-        setTopics([...topics, { title: "", description: "" }]);
+        console.log("Topics data posted successfully:", response.data);
       })
       .catch((error) => {
-        console.error("Error posting topic data:", error);
+        console.error("Error posting topics data:", error);
       });
+
+    // Optionally, you can clear the topics array after submission
+    setTopics([{ topicName: "", description: "" }]);
   };
 
   return (

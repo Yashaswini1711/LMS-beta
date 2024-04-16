@@ -29,7 +29,7 @@ export function BulkUpload() {
       formData.append("file", selectedFile);
 
       axios
-        .post("http://localhost:1111/learningplans/upload", formData)
+        .post("http://172.18.4.108:1111/learning-plan/upload", formData)
         .then((response) => {
           console.log("File uploaded successfully");
           // Additional handling if needed
