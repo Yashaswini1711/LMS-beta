@@ -8,9 +8,12 @@ import {
 } from "@material-tailwind/react";
 import axios from "axios";
 import { useState } from "react";
+import { useLocation } from "react-router-dom";
 
 export function Topics() {
   const [topics, setTopics] = useState([{ topicName: "", description: "" }]);
+  const location = useLocation();
+  const courseId = location.state.courseId;
 
   const handleAddTopic = () => {
     setTopics([...topics, { topicName: "", description: "" }]);
@@ -31,9 +34,15 @@ export function Topics() {
   const handleSubmitAllTopics = (e) => {
     e.preventDefault();
 
-    const topicData = topics[topics.length - 1]; // Get the last topic added
+    const topicData = topics[topics.length - 1];
+    const topicWithCourse = {
+      ...topicData,
+      course: {
+        courseID: courseId,
+      },
+    };
     axios
-      .post("http://172.18.4.108:1111/topic", topicData)
+      .post("http://172.18.4.108:1111/topic", topicWithCourse)
       .then((response) => {
         console.log("Topic data posted successfully:", response.data);
         setTopics([...topics, { title: "", description: "" }]);
@@ -87,6 +96,7 @@ export function Topics() {
                     }
                   />
                 </div>
+                <p>Course ID: {courseId}</p>
                 <div className="flex justify-end">
                   <Button
                     variant="gradient"

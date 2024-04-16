@@ -46,7 +46,7 @@ export function CreatePlan() {
   const handleSubmit = (event) => {
     console.log(batch.batchId, typeof type);
     const formData = {
-      batchID: 43,
+      batchID: batch.batchId,
       type: type,
     };
 
