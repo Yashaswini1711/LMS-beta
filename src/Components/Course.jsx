@@ -26,6 +26,7 @@ export function Course() {
   const [showCourseDiv, setShowCourseDiv] = useState(false);
   const [selectDisabled, setSelectDisabled] = useState(false);
   const [AlertOpen, setAlertOpen] = useState(false);
+  const [successAlert, setSuccessAlert] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -35,12 +36,6 @@ export function Course() {
     }));
   };
   const handleChangeLevel = (value) => {
-    setCourseData((prevState) => ({
-      ...prevState,
-      level: value,
-    }));
-  };
-  const handleInitialLevel = (value) => {
     setCourseData((prevState) => ({
       ...prevState,
       level: value,
@@ -81,23 +76,6 @@ export function Course() {
     }));
   };
 
-  // useEffect(()=>{
-  //   getCourseId()
-  // },[courseData])
-
-  // const  getCourseId = async () => {
-  //   try {
-  //     const response = await axios.get("http://172.18.4.108:1111/course");
-  //     if (response.status === 200) {
-  //       setCourseItem(response.data);
-  //     } else {
-  //       console.error("Failed to fetch courses.");
-  //     }
-  //   } catch (error) {
-  //     console.error("Error occurred while fetching courses:", error);
-  //   }
-  // };
-
   const handleButtonClick = () => {
     setShowCourseDiv(true);
     setSelectDisabled(true);
@@ -105,33 +83,62 @@ export function Course() {
 
   const handleAddTopics = () => {
     console.log(courseData);
-    if (courseData.courseID != 0) {
-      setAlertOpen(false);
+    if (courseData.courseID || courseData.courseName) {
       if (selectDisabled) {
-        axios
-          .post("http://172.18.4.108:1111/course", courseData)
-          .then((response) => {
-            console.log("Course data posted successfully:", response.data);
-            // Extract course ID from the response data
-            const courseId = response.data.courseID;
-            console.log(courseId);
-            navigate("/topics", { state: { courseId: courseId } });
-          })
-          .catch((error) => {
-            console.error("Error posting course data:", error);
-          });
+        if (courseData.courseName && courseData.level) {
+          setAlertOpen(false);
+          setSuccessAlert(true);
+          axios
+            .post("http://172.18.4.108:1111/course", courseData)
+            .then((response) => {
+              console.log("Course data posted successfully:", response.data);
+              // Extract course ID from the response data
+              const courseId = response.data.courseID;
+              console.log(courseId);
+
+              setTimeout(() => {
+                navigate("/topics", { state: { courseId: courseId } });
+              }, 2000);
+            })
+            .catch((error) => {
+              console.error("Error posting course data:", error);
+            });
+        } else {
+          setAlertOpen(true);
+          setTimeout(() => {
+            setAlertOpen(false);
+          }, 3000);
+        }
       } else {
-        navigate("/topics", { state: { courseId: courseData.courseID } });
+        setSuccessAlert(true);
+        setTimeout(() => {
+          navigate("/topics", { state: { courseId: courseData.courseID } });
+        }, 2000);
       }
     } else {
       setAlertOpen(true);
+      setTimeout(() => {
+        setAlertOpen(false);
+      }, 3000);
     }
   };
   return (
-    <div className="h-screen w-full flex-row  justify-center items-center ">
+    <div className="h-screen w-full flex  justify-center items-center ">
+      {successAlert && (
+        <Alert
+          color="green"
+          className=" absolute top-1 right-2 animate-fadeOut w-1/4"
+        >
+          <img src={"../assets/LoadingIcon.svg"} alt="mySvgImage" />
+          Courses Added Successfully
+        </Alert>
+      )}
       {AlertOpen && (
-        <Alert color="red" className=" absolute top[-500px]">
-          An error alert for showing message.
+        <Alert
+          color="red"
+          className=" absolute top-1 right-2 animate-fadeOut w-1/4"
+        >
+          Please fill all the Fields.
         </Alert>
       )}
       <Card className="w-full md:w-3/4 lg:w-2/4 xl:w-2/4 mx-auto">

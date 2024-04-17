@@ -23,7 +23,7 @@ export function CreatePlan() {
 
   const fetchBatchItems = async () => {
     try {
-      const response = await axios.get("http://172.18.4.243:8078/batch");
+      const response = await axios.get("http://13.42.28.7/batch");
       if (response.status === 200) {
         setBatchItems(response.data);
       } else {
@@ -52,7 +52,7 @@ export function CreatePlan() {
 
     if (batchItems && type) {
       axios
-        .post("http://172.18.4.108:1111/learning-plan", formData)
+        .post("http://13.42.28.7/learning-plan", formData)
         .then((response) => {
           console.log("Learning plan saved successfully:", response.data);
           const learningPlanID = response.data.learningPlanID;
