@@ -1,4 +1,4 @@
-import { Button, Card, Option, Select} from "@material-tailwind/react";
+import { Button, Card } from "@material-tailwind/react";
 import { useRef, useState } from "react";
 import axios from 'axios';
 
@@ -28,7 +28,7 @@ export function BulkUpload() {
       const formData = new FormData();
       formData.append('file', selectedFile);
 
-      axios.post('http://localhost:1111/learningplans/upload', formData)
+      axios.post(`${import.meta.env.VITE_API_URL}/learning-plan/upload`, formData)
         .then(response => {
           console.log('File uploaded successfully');
           // Additional handling if needed
@@ -52,7 +52,6 @@ export function BulkUpload() {
         Upload Files
       </Button>
       {selectedFile && <p className="absolute top-40 mt-3 ml-2 text-sm">Selected File: {selectedFile.name}</p>}
-      
       <Button variant="gradient" className="flex items-center gap-3 w-1/5" onClick={handleUpload}>
         Submit
       </Button>
