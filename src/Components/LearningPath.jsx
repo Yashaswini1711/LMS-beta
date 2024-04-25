@@ -1,4 +1,5 @@
 import {
+  Alert,
   Button,
   Card,
   CardBody,
@@ -42,6 +43,25 @@ export function LearningPath() {
   const [successAlert, setSuccessAlert] = useState(false);
   const [dateAlert, setDateAlert] = useState(false);
   const navigate = useNavigate();
+  const [learningPath, setLearningPath] = useState([
+    {
+      pathID: "",
+      learningPlan: {
+        learningPlanID: "",
+        batchID: batchId,
+        type: "",
+      },
+      course: {
+        courseName: "",
+        courseID: "",
+        level: "",
+      },
+      type: "",
+      trainer: "",
+      startDate: "",
+      endDate: "",
+    },
+  ]);
 
   useEffect(() => {
     fetchCourseItems();
@@ -51,7 +71,11 @@ export function LearningPath() {
     try {
       const response = await axios.get("http://172.18.4.108:1111/course");
       if (response.status === 200) {
-        setCourseItem(response.data);
+        if (Array.isArray(response.data)) {
+          setCourseItem(response.data);
+        } else {
+          console.error("The fetched data is not an array:", response.data);
+        }
       } else {
         console.error("Failed to fetch courses.");
       }
@@ -60,37 +84,59 @@ export function LearningPath() {
     }
   };
 
-  const handleStartDate = (value) => {
+  const handleStartDate = (index, field, value) => {
     setStartDate(value);
+
+    setLearningPath((prevLearningPath) => {
+      const updatedLearningPath = [...prevLearningPath];
+      updatedLearningPath[index] = {
+        ...updatedLearningPath[index],
+        [field]: value,
+        startDate: value, // Update the 'type' field here
+      };
+      return updatedLearningPath;
+    });
   };
-  const handleEndDate = (value) => {
+  const handleEndDate = (index, field, value) => {
     setEndDate(value);
+
+    setLearningPath((prevLearningPath) => {
+      const updatedLearningPath = [...prevLearningPath];
+      updatedLearningPath[index] = {
+        ...updatedLearningPath[index],
+        [field]: value,
+        endDate: value, // Update the 'type' field here
+      };
+      return updatedLearningPath;
+    });
   };
   useEffect(() => {
-    const dateChecker =
-      startDateOfPlan.replace(/-/g, "") - endDateOfPlan.replace(/-/g, "");
-    if (endDateOfPlan) {
-      if (dateChecker < 0) {
-        if (endDateOfPlan < endDate) {
-          //endDate
-          console.log("Correct Dates");
-          setDateError(false);
-          setEndDateAlert(false);
-        } else {
-          setEndDateAlert(true);
+    if (startDateOfPlan && endDateOfPlan) {
+      const dateChecker =
+        startDateOfPlan.replace(/-/g, "") - endDateOfPlan.replace(/-/g, "");
+      if (endDateOfPlan) {
+        if (dateChecker < 0) {
+          if (endDateOfPlan < endDate) {
+            //endDate
+            console.log("Correct Dates");
+            setDateError(false);
+            setEndDateAlert(false);
+          } else {
+            setEndDateAlert(true);
+          }
+        } else if (dateChecker > 0) {
+          console.log("wrong dates");
+          setDateError(true);
         }
-      } else if (dateChecker > 0) {
-        console.log("wrong dates");
-        setDateError(true);
       }
     }
   }, [endDateOfPlan]);
 
   useEffect(() => {
-    const startDateOfPlanString = startDateOfPlan.replace(/-/g, "");
-    const startDateString = startDate.replace(/-/g, ""); //startDate
-
     if (startDateOfPlan) {
+      const startDateOfPlanString = startDateOfPlan.replace(/-/g, "");
+      const startDateString = startDate.replace(/-/g, ""); //startDate
+
       if (startDateOfPlanString < startDateString) {
         setDateAlert(true);
       } else {
@@ -99,13 +145,33 @@ export function LearningPath() {
     }
   }, [startDateOfPlan]);
 
-  const handleChangeType = (value) => {
+  const handleChangeType = (index, field, value) => {
     setType(value);
+    setLearningPath((prevLearningPath) => {
+      const updatedLearningPath = [...prevLearningPath];
+      updatedLearningPath[index] = {
+        ...updatedLearningPath[index],
+        [field]: value,
+        type: value, // Update the 'type' field here
+      };
+      return updatedLearningPath;
+    });
   };
-
-  const handleCourseItemChange = (value) => {
+  const handleCourseItemChange = (index, field, value) => {
     let course = courseItem.filter((item) => item.courseName === value);
     setSelectedCourse(course[0]);
+    setLearningPath((prevLearningPath) => {
+      const updatedLearningPath = [...prevLearningPath];
+      updatedLearningPath[index] = {
+        ...updatedLearningPath[index],
+        [field]: value,
+        course: {
+          ...updatedLearningPath[index].course,
+          courseName: value,
+        },
+      };
+      return updatedLearningPath;
+    });
   };
 
   const handleInstructorChange = (value) => {
@@ -139,12 +205,36 @@ export function LearningPath() {
           startDate: startDateOfPlan,
           endDate: endDateOfPlan,
         };
-        console.log("Form Data:", formData);
+        // console.log("Form Data:", formData);
+
+        const filteredLearningPath = learningPath.filter(
+          (path) => path.type !== ""
+        );
+
+        const allLearningPath = learningPath.map((pathData, index) => ({
+          pathID: index + 1,
+          learningPlan: {
+            learningPlanID: learningPlanID,
+            batchID: batchId,
+            type: pathData.type,
+          },
+          course: {
+            courseName: pathData.course.courseName, // Accessing courseName property
+            courseID: selectedCourse.courseID, // Placeholder, you might want to populate this
+            level: selectedCourse.level,
+          },
+          type: pathData.type,
+          trainer: pathData.trainer,
+          startDate: pathData.startDate,
+          endDate: pathData.endDate,
+        }));
+
+        console.log("Form Data", allLearningPath);
 
         axios
           .post(
             "http://172.18.4.108:1111/learning-plan-path/multiple",
-            formData
+            allLearningPath
           )
           .then((response) => {
             console.log(
@@ -152,6 +242,25 @@ export function LearningPath() {
               response.data
             );
             setSuccessAlert(true);
+            setLearningPath([
+              {
+                pathID: "",
+                learningPlan: {
+                  learningPlanID: "",
+                  batchID: batchId,
+                  type: "",
+                },
+                course: {
+                  courseName: "",
+                  courseID: "",
+                  level: "",
+                },
+                type: "",
+                trainer: "",
+                startDate: "",
+                endDate: "",
+              },
+            ]);
             setTimeout(() => {
               setSuccessAlert(false);
               navigate("/admindashboard");
@@ -162,6 +271,26 @@ export function LearningPath() {
             console.error("Error posting learning path data:", error);
             console.log("Data is not posting");
           });
+
+        setLearningPath([
+          {
+            pathID: "",
+            learningPlan: {
+              learningPlanID: "",
+              batchID: batchId,
+              type: "",
+            },
+            course: {
+              courseName: "",
+              courseID: "",
+              level: "",
+            },
+            type: "",
+            trainer: "",
+            startDate: "",
+            endDate: "",
+          },
+        ]);
       }
     } else {
       setAlertOpen(true);
@@ -189,152 +318,283 @@ export function LearningPath() {
     setShowInternalTrainers(false);
   };
 
-  const handleExternalTrainerName = (value) => {
+  const handleExternalTrainerName = (index, field, value) => {
     setExternalTrainer(value);
     setInternalTrainer("");
+
+    setLearningPath((prevLearningPath) => {
+      const updatedLearningPath = [...prevLearningPath];
+      updatedLearningPath[index] = {
+        ...updatedLearningPath[index],
+        [field]: value,
+        trainer: value, // Update the 'trainer' field here
+      };
+      return updatedLearningPath;
+    });
   };
 
-  const handleInternalTrainerName = (value) => {
+  const handleInternalTrainerName = (index, field, value) => {
     setInternalTrainer(value);
     setExternalTrainer("");
+
+    setLearningPath((prevLearningPath) => {
+      const updatedLearningPath = [...prevLearningPath];
+      updatedLearningPath[index] = {
+        ...updatedLearningPath[index],
+        [field]: value,
+        trainer: value, // Update the 'trainer' field here
+      };
+      return updatedLearningPath;
+    });
+  };
+
+  const handleAddPath = () => {
+    setLearningPath([
+      ...learningPath,
+      {
+        learningPlan: {
+          learningPlanID: "",
+          batchID: batchId,
+          type: "",
+        },
+        course: {
+          courseName: "",
+          courseID: "",
+          level: "",
+        },
+        type: "",
+        trainer: "",
+        startDate: "",
+        endDate: "",
+      },
+    ]);
+  };
+  const [deletedPaths, setDeletedPaths] = useState([]);
+  const handleDeletePath = (index) => {
+    setDeletedPaths((prevDeletedPaths) => [...prevDeletedPaths, index]);
+
+    setTimeout(() => {
+      setLearningPath((prevLearningPath) => {
+        const updatedLearningPath = [...prevLearningPath];
+        updatedLearningPath.splice(index, 1);
+        return updatedLearningPath;
+      });
+    }, 500); // Wait for the animation to complete
   };
 
   return (
-    <Card className=" w-full md:w-3/4 lg:w-2/4 xl:w-2/4 mx-auto">
-      <CardHeader
-        variant="gradient"
-        color="gray"
-        className="mb-4 grid h-28 place-items-center"
-      >
-        <Typography variant="h5" color="white" className="mb-2">
-          Add Learning Path
-        </Typography>
-      </CardHeader>
-      <CardBody>
-        <form
-          className="container p-6 bg-white rounded-lg"
-          onSubmit={handleSubmit}
-        >
-          <div className="mb-4">
-            <Select
-              required
-              variant="outlined"
-              label="Type"
-              id="Type"
-              name="Type"
-              onChange={handleChangeType}
-            >
-              <Option value="course">COURSE</Option>
-              <Option value="assessments">ASSESSMENTS</Option>
-              <Option value="evaluation">Evaluation</Option>
-            </Select>
-          </div>
-          <div className="mb-4">
-            <Select
-              required
-              variant="outlined"
-              label="Select Course"
-              onChange={handleCourseItemChange}
-            >
-              {courseItem.map((item) => (
-                <Option key={item.courseID} value={item.courseName}>
-                  {item.courseName}
-                </Option>
-              ))}
-            </Select>
-          </div>
-          <div className="mb-4">
-            <Select
-              required
-              variant="outlined"
-              label="Select Trainer"
-              id="Select Trainer"
-              name="Select Trainer"
-            >
-              <Option value="Internal Trainer" onClick={OpenInternalTrainer}>
-                Internal Trainer
-              </Option>
-              <Option value="External Trainer" onClick={OpenExternalTrainer}>
-                External Trainer
-              </Option>
-            </Select>
-            {showInternalTrainers && (
-              <div className="mb-4 mt-4">
-                <Select
-                  variant="outlined"
-                  label="Internal Trainers"
-                  onChange={handleInternalTrainerName}
-                >
-                  <Option value="Krithic">Krithic</Option>
-                  <Option value="Krithic">Krithic</Option>
-                  <Option value="Krithic">Krithic</Option>
-                  <Option value="Krithic">Krithic</Option>
-                </Select>
-              </div>
-            )}
-            {showExternalTrainers && (
-              <div className="mb-4 mt-4">
-                <Input
-                  label="ExternalTrainer Name"
-                  value={ExternalTrainer}
-                  onChange={(e) => handleExternalTrainerName(e.target?.value)}
-                />
-              </div>
-            )}
-          </div>
-          <div className="mb-4">
-            <Input
-              id="start_date"
-              type="date"
-              variant="outlined"
-              label="Start date"
-              shrink={true}
-              onChange={(e) => handleStartDate(e.target.value)}
-              style={{ cursor: "pointer" }}
-            />
-            {dateAlert && dateAlert ? (
-              <p className="text-red-500 text-sm mt-1 ml-1">
-                {`* Date should be within the specific batch Timeline ${DateFormater(
-                  startDate
-                )} & ${DateFormater(endDate)}`}
-              </p>
-            ) : null}
-          </div>
-          <div className="mb-4">
-            <Input
-              id="end_date"
-              type="date"
-              variant="outlined"
-              label="End date"
-              shrink={true}
-              error={dateError ? true : false}
-              onChange={(e) => handleEndDate(e.target.value)}
-              style={{ cursor: "pointer" }}
-            />
-            {dateError && dateError ? (
-              <p className="text-red-500 text-sm mt-1 ml-1">
-                * Date is Invalid
-              </p>
-            ) : null}
-            {endDateAlert && (
-              <p className="text-red-500 text-sm mt-1 ml-1">
-                {`* Date should be within the specific batch Timeline ${DateFormater(
-                  startDate
-                )} & ${DateFormater(endDate)}`}
-              </p>
-            )}
-          </div>
-
-          <div className="mb-4 flex justify-end gap-2">
-            <Button className="" ripple={true}>
-              +
-            </Button>
-            <Button ripple={true} type="submit">
+    <div className="w-full h-screen flex justify-center items-center bg-gray-200">
+      <div className="max-w-4xl w-full">
+        {successAlert && (
+          <Alert
+            color="green"
+            className=" absolute top-1 right-2 animate-fadeOut w-1/4"
+          >
+            {/* <img src={"../assets/LoadingIcon.svg"} alt="mySvgImage" /> */}
+            Learning Plan Added Successfully
+          </Alert>
+        )}
+        {AlertOpen && (
+          <Alert
+            color="red"
+            className=" absolute top-1 right-2 animate-fadeOut w-1/4"
+          >
+            Please fill all the Fields.
+          </Alert>
+        )}
+        <Card className="h-auto w-full mx-auto ">
+          <CardHeader
+            variant="gradient"
+            color="gray"
+            className=" grid place-items-center h-[100px] w-full ml-0 mr-0 static shadow-none"
+          >
+            <Typography variant="h5" color="white" className="">
               Add Learning Path
-            </Button>
-          </div>
-        </form>
-      </CardBody>
-    </Card>
+            </Typography>
+          </CardHeader>
+          <CardBody className="max-h-[65vh] pt-0 overflow-y-auto">
+            <form
+              className="container p-1 bg-white rounded-lg"
+              onSubmit={handleSubmit}
+            >
+              {learningPath.map((topic, index) => (
+                <div
+                  key={index}
+                  className={`mb-5 mt-5 ${
+                    deletedPaths.includes(index) ? "slideOutLeft" : ""
+                  }`}
+                  onAnimationEnd={() => {
+                    if (deletedPaths.includes(index)) {
+                      setDeletedPaths((prevDeletedPaths) =>
+                        prevDeletedPaths.filter((item) => item !== index)
+                      );
+                    }
+                  }}
+                >
+                  <h3 className="text-lg font-bold">{`LearningPath - ${
+                    index + 1
+                  }`}</h3>
+                  <div className="mb-4">
+                    <Select
+                      required
+                      variant="outlined"
+                      label="Type"
+                      id={`Type${index}`}
+                      name="Type"
+                      onChange={(value) =>
+                        handleChangeType(index, "Type", value)
+                      }
+                    >
+                      <Option value="course">COURSE</Option>
+                      <Option value="MCQ">MCQ</Option>
+                      <Option value="Evaluation">Evaluation</Option>
+                    </Select>
+                  </div>
+                  <div className="mb-4">
+                    <Select
+                      id={`Course${index}`}
+                      required
+                      variant="outlined"
+                      label="Select Course"
+                      onChange={(value) =>
+                        handleCourseItemChange(index, "courseName", value)
+                      }
+                    >
+                      {courseItem &&
+                        courseItem.map((item) => (
+                          <Option key={item.courseID} value={item.courseName}>
+                            {item.courseName}
+                          </Option>
+                        ))}
+                    </Select>
+                  </div>
+                  <div className="mb-4">
+                    <Select
+                      required
+                      variant="outlined"
+                      label="Select Trainer"
+                      id="Select Trainer"
+                      name="Select Trainer"
+                    >
+                      <Option
+                        value="Internal Trainer"
+                        onClick={OpenInternalTrainer}
+                      >
+                        Internal Trainer
+                      </Option>
+                      <Option
+                        value="External Trainer"
+                        onClick={OpenExternalTrainer}
+                      >
+                        External Trainer
+                      </Option>
+                    </Select>
+                    {showInternalTrainers && (
+                      <div className="mb-4 mt-4">
+                        <Select
+                          id={`InternalTrainer${index}`}
+                          variant="outlined"
+                          label="Internal Trainers"
+                          onChange={(value) =>
+                            handleInternalTrainerName(index, "trainer", value)
+                          }
+                        >
+                          <Option value="Shashank">Shashank</Option>
+                          <Option value="Niitsh">Nitish</Option>
+                          <Option value="Subiksha">Subiksha</Option>
+                          <Option value="Yeshyeshwini">Yeshyeshwini</Option>
+                        </Select>
+                      </div>
+                    )}
+                    {showExternalTrainers && (
+                      <div className="mb-4 mt-4">
+                        <Input
+                          id={`ExternalTrainer${index}`}
+                          label="ExternalTrainer Name"
+                          value={topic.trainer}
+                          onChange={(e) =>
+                            handleExternalTrainerName(
+                              index,
+                              "trainer",
+                              e.target.value
+                            )
+                          }
+                        />
+                      </div>
+                    )}
+                  </div>
+                  <div className="mb-4">
+                    <Input
+                      id={`start_date${index}`}
+                      type="date"
+                      variant="outlined"
+                      label="Start date"
+                      shrink={true}
+                      value={topic.startDate}
+                      onChange={(e) =>
+                        handleStartDate(index, "startDate", e.target.value)
+                      }
+                      style={{ cursor: "pointer" }}
+                    />
+                    {dateAlert && dateAlert ? (
+                      <p className="text-red-500 text-sm mt-1 ml-1">
+                        {`* Date should be within the specific batch Timeline ${DateFormater(
+                          startDate
+                        )} & ${DateFormater(endDate)}`}
+                      </p>
+                    ) : null}
+                  </div>
+                  <div className="mb-4">
+                    <Input
+                      id={`end_date${index}`}
+                      type="date"
+                      variant="outlined"
+                      label="End date"
+                      shrink={true}
+                      value={topic.endDate}
+                      error={dateError ? true : false}
+                      onChange={(e) =>
+                        handleEndDate(index, "endDate", e.target.value)
+                      }
+                      style={{ cursor: "pointer" }}
+                    />
+                    {dateError && dateError ? (
+                      <p className="text-red-500 text-sm mt-1 ml-1">
+                        * Date is Invalid
+                      </p>
+                    ) : null}
+                    {endDateAlert && (
+                      <p className="text-red-500 text-sm mt-1 ml-1">
+                        {`* Date should be within the specific batch Timeline ${DateFormater(
+                          startDate
+                        )} & ${DateFormater(endDate)}`}
+                      </p>
+                    )}
+                  </div>
+                  <div className="mb-2 flex  items-start ">
+                    <Button
+                      color="red"
+                      size="sm"
+                      onClick={() => handleDeletePath(index)}
+                    >
+                      <i className="fa fa-trash" /> Delete
+                    </Button>
+                  </div>
+                </div>
+              ))}
+
+              <div className=" flex justify-end gap-2">
+                <Button className="" variant="filled" onClick={handleAddPath}>
+                  +
+                </Button>
+                <Button ripple={true} type="submit">
+                  Add Learning Path
+                </Button>
+              </div>
+            </form>
+          </CardBody>
+        </Card>
+      </div>
+    </div>
   );
 }
