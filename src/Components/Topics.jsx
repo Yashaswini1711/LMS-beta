@@ -35,26 +35,25 @@ export function Topics() {
     setTopics(newTopics);
   };
 
-
-
-
   const handleSubmitAllTopics = (e) => {
     e.preventDefault();
-  
-    const apiUrl = import.meta.env.VITE_API_URL;
-  
+
+    // Construct an array to hold all topic data
     const allTopicsData = topics.map((topicData, index) => ({
-      topicID: index,
+      topicID: index, // Assuming topicID is based on index, you might have a different way of generating IDs
       topicName: topicData.topicName,
       description: topicData.description,
       course: {
         courseID: courseId,
       },
     }));
-  
+
+    console.log();
+
     if (topics[0].topicName) {
+      // Post all topics data
       axios
-        .post(`${apiUrl}/topic/multiple`, allTopicsData)
+        .post("http://172.18.4.108:1111/topic/multiple", allTopicsData)
         .then((response) => {
           console.log("Topics data posted successfully:", response.data);
           setSuccessAlert(true);
@@ -68,7 +67,8 @@ export function Topics() {
         .catch((error) => {
           console.error("Error posting topics data:", error);
         });
-  
+
+      // Optionally, you can clear the topics array after submission
       setTopics([{ topicName: "", description: "" }]);
     } else {
       setShowAlert(true);
@@ -77,8 +77,6 @@ export function Topics() {
       }, [3000]);
     }
   };
-  
-
   return (
     <div className="h-screen w-full flex  justify-center items-center ">
       {successAlert && (
