@@ -14,7 +14,6 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 export function Course() {
-  
   const [courseData, setCourseData] = useState({
     courseName: "",
     level: "",
@@ -57,20 +56,19 @@ export function Course() {
     }));
   };
 
-const fetchCourseItems = async () => {
-  try {
-    const response = await axios.get(import.meta.env.VITE_API_URL + "/course");
-    if (response.status === 200) {
-      setCourseItem(response.data);
-    } else {
-      console.error("Failed to fetch courses.");
+  const fetchCourseItems = async () => {
+    try {
+      const response = await axios.get("http://172.18.4.108:1111/course");
+      if (response.status === 200) {
+        setCourseItem(response.data);
+      } else {
+        console.error("Failed to fetch courses.");
+      }
+    } catch (error) {
+      console.error("Error occurred while fetching courses:", error);
     }
-  } catch (error) {
-    console.error("Error occurred while fetching courses:", error);
-  }
-};
+  };
 
-  
   useEffect(() => {
     fetchCourseItems();
   }, []);
@@ -106,7 +104,7 @@ const fetchCourseItems = async () => {
           setAlertOpen(false);
           setSuccessAlert(true);
           axios
-            .post(import.meta.env.VITE_API_URL + "/course", courseData)
+            .post("http://172.18.4.108:1111/course", courseData)
             .then((response) => {
               console.log("Course data posted successfully:", response.data);
               // Extract course ID from the response data
