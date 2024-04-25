@@ -11,7 +11,7 @@ import {
 import axios from "axios"; // Import axios
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
- 
+
 export function CreatePlan() {
   const [batchItems, setBatchItems] = useState([]);
   const [batch, setBatch] = useState({});
@@ -19,15 +19,21 @@ export function CreatePlan() {
   const navigate = useNavigate();
   const [AlertOpen, setAlertOpen] = useState(false);
   const [successAlert, setSuccessAlert] = useState(false);
- 
+  const [existingSuccessAlert, setExistingSuccessAlert] = useState(false);
+
   useEffect(() => {
     fetchBatchItems();
   }, []);
- 
+
   const fetchBatchItems = async () => {
     try {
-      const response = await axios.get("http://172.18.4.243:8090/batch");
+      const response = await axios.get(
+        "http://172.18.4.243:8090/batch"
+        // `${import.meta.env.VITE_API_URL2}/batch`
+      );
+
       if (response.status === 200) {
+        console.log(response.data);
         setBatchItems(response.data);
       } else {
         console.error("Failed to fetch courses.");
@@ -36,72 +42,106 @@ export function CreatePlan() {
       console.error("Error occurred while fetching courses:", error);
     }
   };
- 
+
   const handleChangeBatch = (value) => {
     let matchedBatch = batchItems.filter((item) => item.batchName === value);
     setBatch(matchedBatch[0]);
-    console.log(matchedBatch[0].batchId);
   };
- 
+
   const handleChangeType = (value) => {
     setType(String(value));
   };
- 
+
   const handleSubmit = (event) => {
-    // console.log(batch.batchId, typeof type);
-    console.log(batch.batchID);
     const formData = {
-      batchID: 47, //batch.batchId
+      batchID: batch.batchId, //batch.batchId
       type: type,
     };
- 
+
     if (batchItems && type) {
+      // Check if learning plan already exists
       axios
-        .post("http://172.18.4.108:1111/learning-plan", formData)
+        .get("http://172.18.4.108:1111/learning-plan", {
+          //`${import.meta.env.VITE_API_URL}/learning-plan`
+          params: {
+            batchID: batch.batchId,
+            type: type,
+          },
+        })
         .then((response) => {
-          setAlertOpen(false);
-          setSuccessAlert(true);
-          setTimeout(() => {
-            setSuccessAlert(false);
-          }, 2000);
-          console.log("Learning plan saved successfully:", response.data);
-          const learningPlanID = response.data.learningPlanID;
-          navigate("/path", {
-            state: { learningPlanID: learningPlanID, batch: batch },
-          });
+          if (response.data && response.data.length > 0) {
+            // Learning plan already exists, navigate to path page
+            setExistingSuccessAlert(true);
+            const learningPlanID = response.data[0].learningPlanID;
+            setTimeout(() => {
+              setExistingSuccessAlert(false);
+              navigate("/path", {
+                state: { learningPlanID: learningPlanID, batch: batch },
+              });
+            }, 2000);
+          } else {
+            // Learning plan doesn't exist, make a POST request
+            axios
+              .post("http://172.18.4.108:1111/learning-plan", formData)
+              .then((response) => {
+                setAlertOpen(false);
+                setSuccessAlert(true);
+                setTimeout(() => {
+                  setSuccessAlert(false);
+                  navigate("/path", {
+                    state: {
+                      learningPlanID: learningPlanID,
+                      batch: batch,
+                    },
+                  });
+                }, 2000);
+                console.log("Learning plan saved successfully:", response.data);
+                const learningPlanID = response.data.learningPlanID;
+              })
+              .catch((error) => {
+                console.error("Error saving learning plan:", error);
+              });
+          }
         })
         .catch((error) => {
-          console.error("Error saving learning plan:", error);
+          console.error("Error checking learning plan existence:", error);
         });
     } else {
       setAlertOpen(true);
     }
- 
+
     event.preventDefault();
- 
+
     event.target.reset();
   };
- 
+
   return (
-    <div className="h-screen w-full flex  justify-center items-center ">
+    <div className="h-screen w-full flex justify-center items-center">
+      {existingSuccessAlert && (
+        <Alert
+          color="green"
+          className="absolute top-1 right-2 animate-fadeOut w-1/4"
+        >
+          Existing Learning Plan Added
+        </Alert>
+      )}
       {successAlert && (
         <Alert
           color="green"
-          className=" absolute top-1 right-2 animate-fadeOut w-1/4"
+          className="absolute top-1 right-2 animate-fadeOut w-1/4"
         >
-          {/* <img src={"../assets/LoadingIcon.svg"} alt="mySvgImage" /> */}
           Learning Plan Added
         </Alert>
       )}
       {AlertOpen && (
         <Alert
           color="red"
-          className=" absolute top-1 right-2 animate-fadeOut w-1/4"
+          className="absolute top-1 right-2 animate-fadeOut w-1/4"
         >
           Please fill all the Fields.
         </Alert>
       )}
-      <Card className="mt-6 w-full md:w-3/4 lg:w-2/4 xl:w-2/4 mx-auto ">
+      <Card className="mt-6 w-full md:w-3/4 lg:w-2/4 xl:w-2/4 mx-auto">
         <CardHeader
           variant="gradient"
           color="gray"
@@ -143,7 +183,7 @@ export function CreatePlan() {
                 <Select.Option value="org_wide">ORG-WIDE</Select.Option>
               </Select>
             </div>
- 
+
             <div className="mb-4 flex justify-end">
               <Button ripple={true} type="submit">
                 Add Plan
